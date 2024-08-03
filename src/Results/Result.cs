@@ -2,22 +2,7 @@
 
 public readonly struct Result
 {
-	public Result(
-		Outcome outcome)
-	{
-		Outcome = outcome;
-		Errors = ImmutableArray<String>.Empty;
-	}
-
-	public Result(
-		Outcome outcome,
-		String error)
-	{
-		Outcome = outcome;
-		Errors = ImmutableArray.Create(error);
-	}
-
-	public Result(
+	internal Result(
 		Outcome outcome,
 		ImmutableArray<String> errors)
 	{
@@ -25,35 +10,20 @@ public readonly struct Result
 		Errors = errors;
 	}
 
-	public Result(
-		Outcome outcome,
-		Exception exception)
-	{
-		Outcome = outcome;
-		Errors = ImmutableArray.Create(exception.Message);
-	}
-
-	public Result(
-		Exception exception)
-	{
-		Outcome = Outcome.Error;
-		Errors = ImmutableArray.Create(exception.Message);
-	}
-
 	public static Result Conflict =>
-		new(Outcome.Conflict);
+		new(Outcome.Conflict, []);
 
 	public static Result Forbidden =>
-		new(Outcome.Forbidden);
+		new(Outcome.Forbidden, []);
 
 	public static Result Invalid =>
-		new(Outcome.Invalid);
+		new(Outcome.Invalid, []);
 
 	public static Result NotFound =>
-		new(Outcome.NotFound);
+		new(Outcome.NotFound, []);
 
 	public static Result Ok =>
-		new(Outcome.Ok);
+		new(Outcome.Ok, []);
 
 	public ImmutableArray<String> Errors { get; init; }
 
@@ -62,7 +32,16 @@ public readonly struct Result
 	public Outcome Outcome { get; }
 
 	public static implicit operator Result(Exception exception) =>
-		new(exception);
+		new(Outcome.Error, [exception.Message]);
+
+	public static implicit operator Result((Result Result, ImmutableArray<String> Errors) tuple) =>
+		new(tuple.Result.Outcome, tuple.Errors);
+
+	public static implicit operator Result((Result Result, String Error) tuple) =>
+		new(tuple.Result.Outcome, [tuple.Error]);
+
+	public static implicit operator Result((Result Result, Exception Exception) tuple) =>
+		new(tuple.Result.Outcome, [tuple.Exception.Message]);
 
 	public static Boolean operator !=(Result result, Outcome outcome) =>
 		result.Outcome != outcome;
